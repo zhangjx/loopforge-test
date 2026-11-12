@@ -1,0 +1,265 @@
+/* ============================================================
+   贪吃蛇 - 样式（响应式 + 可访问性）
+   纯 CSS，无外部依赖。配色满足 WCAG AA（文本对比度 ≥4.5:1）。
+   ============================================================ */
+
+:root {
+  --bg: #f4f6f8;
+  --panel: #ffffff;
+  --ink: #1f2933;        /* 主文本：对 --bg 对比度 ≈ 12:1 */
+  --ink-soft: #3e4c59;   /* 次文本：对 --bg ≈ 7:1 */
+  --accent: #2b6cb0;     /* 主色：对 --bg ≈ 4.6:1 */
+  --accent-ink: #ffffff; /* 按钮文字：对 --accent ≈ 4.6:1 */
+  --board-bg: #fafafa;
+  --grid-line: #e6e6e6;
+  --snake: #2f855a;
+  --snake-head: #22543d;
+  --food: #c53030;
+  --overlay-bg: rgba(31, 41, 51, 0.78);
+  --overlay-ink: #ffffff;
+  --focus: #1d4ed8;
+  --radius: 10px;
+  --max-board: 600px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* 禁止横向滚动 */
+  overflow-x: hidden;
+}
+
+/* ---------- 应用容器 ---------- */
+.game-app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  min-height: 100%;
+  width: 100%;
+}
+
+/* ---------- 头部 / HUD ---------- */
+.game-header {
+  width: 100%;
+  max-width: var(--max-board);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.game-title {
+  margin: 0;
+  font-size: 1.5rem;
+  text-align: center;
+  color: var(--ink);
+}
+
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.hud-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 84px;
+}
+
+.hud-label {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.hud-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ink);
+  /* 等宽数字避免跳动 */
+  font-variant-numeric: tabular-nums;
+}
+
+#difficulty {
+  font: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+/* ---------- 棋盘 ---------- */
+.board-wrap {
+  position: relative;
+  width: 100%;
+  max-width: var(--max-board);
+  /* 保持正方形：基于宽度，高度由 JS 设定相同 cell 尺寸 */
+  display: flex;
+  justify-content: center;
+}
+
+#board {
+  display: block;
+  background: var(--board-bg);
+  border-radius: var(--radius);
+  /* 触屏：禁止默认手势（滚动/缩放），由 JS 判定方向 */
+  touch-action: none;
+  /* 焦点可见 */
+  outline: none;
+}
+
+#board:focus-visible {
+  box-shadow: 0 0 0 3px var(--focus);
+}
+
+/* ---------- 状态覆盖层 ---------- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;     /* 不拦截触屏/点击，方向仍由全局监听处理 */
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  border-radius: var(--radius);
+}
+
+.overlay.show {
+  opacity: 1;
+  background: var(--overlay-bg);
+}
+
+.overlay p {
+  margin: 0;
+  padding: 12px 18px;
+  color: var(--overlay-ink);
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.4;
+  /* 对半透明深色背景对比度 ≥ 4.5:1 */
+}
+
+/* ---------- 控件 ---------- */
+.controls {
+  width: 100%;
+  max-width: var(--max-board);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#restart {
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  cursor: pointer;
+  /* 键盘可达 */
+}
+
+#restart:hover {
+  filter: brightness(1.05);
+}
+
+#restart:active {
+  transform: translateY(1px);
+}
+
+/* 全局可见焦点样式（键盘） */
+#restart:focus-visible,
+#difficulty:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* ---------- 响应式：移动端（≤768px） ---------- */
+@media (max-width: 768px) {
+  .game-app {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .game-title {
+    font-size: 1.25rem;
+  }
+
+  .hud {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .hud-item {
+    min-width: 70px;
+  }
+
+  .hud-value {
+    font-size: 1.1rem;
+  }
+
+  .overlay p {
+    font-size: 1rem;
+  }
+
+  .hint {
+    font-size: 0.72rem;
+  }
+}
+
+/* 极窄屏（≤360px）：避免分数区挤压 */
+@media (max-width: 360px) {
+  .hud {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hud-item {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+/* 尊重用户减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    transition: none;
+  }
+}
